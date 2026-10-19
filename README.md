@@ -7,11 +7,11 @@ Mở trực tiếp `index.html` trên điện thoại hoặc máy tính. Website
 - Khi mở: ba ảnh hoa hồng thật xếp lớp, chuyển động kín màn hình rồi khép lại sau khoảng 3 giây để hiện lời chúc. Có nút **Bỏ qua**.
 - Ở lời chúc: chạm vào chữ để mở bức thư đầy đủ, chạm từng đoạn thư để thấy hiệu ứng tim; kéo cụm ảnh hoa để tạo cánh hoa, vuốt trái hoặc bấm nút bên dưới để mở ảnh.
 - Ở ảnh: 10 khung ảnh xoay quanh quả cầu. Kéo ngang để xoay quanh, kéo lên/xuống để đổi góc nhìn; bấm một ảnh để xem lớn và vuốt trong chế độ xem lớn để đổi ảnh. Vuốt phải một quãng dài hoặc vuốt phải trên nền để trở lại lời chúc; cũng có nút mũi tên quay lại.
-- Nhạc chỉ phát khi người xem bấm **Bật nhạc**.
+- Chạm **Bật nhạc** để phát đoạn nhạc 47 giây từ `assets/audio/`. Không dùng trình phát hoặc đường link bên ngoài.
 
 ## Thay 10 ảnh
 
-Chép 10 ảnh JPG vào `assets/images/`, đặt tên `photo-01.jpg` đến `photo-10.jpg`. Ảnh dọc tỉ lệ khoảng 4:5 đẹp nhất. Nếu dùng tên hoặc định dạng khác, sửa đường dẫn `src` tương ứng trong mảng `photos` ở `config.js`. Ảnh thiếu sẽ hiện placeholder hoa và không làm hỏng trang.
+Hiện có 9 ảnh bạn thêm tại `assets/images/photo-01.jpg` đến `photo-09.jpg`; `photo-10.jpg` là ảnh hoa hồng để đủ 10 vị trí. Có thể thay ảnh thứ 10 bằng ảnh của bạn. Ảnh dọc tỉ lệ khoảng 4:5 đẹp nhất. Nếu dùng tên hoặc định dạng khác, sửa đường dẫn `src` tương ứng trong mảng `photos` ở `config.js`. Ảnh thiếu sẽ hiện placeholder hoa và không làm hỏng trang.
 
 ## Sửa lời chúc
 
@@ -19,9 +19,7 @@ Mở `config.js` và sửa `recipient` (người nhận), `sender` (người g�
 
 ## Nhạc nền
 
-Nhạc nền là [“There is Romance” của Kevin MacLeod](https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100044), dùng theo [giấy phép CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). File nằm tại `assets/audio/nhac-nen.mp3`; giữ thông tin ghi công trên website nếu chia sẻ trang. Nhạc phát sau khi người xem bấm **Bật nhạc** do giới hạn tự phát của trình duyệt.
-
-Muốn thay nhạc, chép MP3 khác vào `assets/audio/nhac-nen.mp3` và cập nhật dòng ghi công. Muốn tắt chức năng này, đổi `music` trong `config.js` thành `""`. Thiếu file nhạc thì website vẫn hoạt động bình thường.
+Trang phát bản MP3 “Somebody's Pleasure” dài 47 giây bạn đã thêm. File được sao chép từ `assets/images/` sang `assets/audio/somebodys-pleasure-chorus.mp3`; nút nhạc phát và lặp đoạn này trực tiếp khi chạm. Nếu muốn thay bằng đoạn khác, chép file vào `assets/audio/` và sửa đường dẫn `music` trong `config.js`.
 
 ## Ảnh hoa hồng dùng trong giao diện
 

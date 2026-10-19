@@ -10,7 +10,7 @@ window.GARDEN_CONFIG = {
     "À mà anh nghe nói con gái hay cười thì thường gặp nhiều may mắn, nên em nhớ cười thật nhiều nhé. Với cả nụ cười xinh như thế mà không khoe ra thì hơi phí đó nha hh.",
     "Cuối cùng, chúc cô gái xinh xắn, đáng yêu và có một chút xíu dễ thương này luôn bình an, hạnh phúc và được cuộc đời đối xử thật dịu dàng nhéee. Happy Women's Day! ❤️"
   ],
-  music: "assets/audio/nhac-nen.mp3", // Để chuỗi rỗng "" nếu không muốn dùng nhạc.
+  music: "assets/audio/somebodys-pleasure-chorus.mp3", // Đoạn nhạc 47 giây bạn đã thêm, phát từ file local.
   photos: [
     { src: "assets/images/photo-01.jpg", caption: "Nhìn tấm này là thấy vui rồi ♡" },
     { src: "assets/images/photo-02.jpg", caption: "Một chút nắng, một chút vui" },
@@ -21,6 +21,6 @@ window.GARDEN_CONFIG = {
     { src: "assets/images/photo-07.jpg", caption: "Cười thêm một xíu nữa nha" },
     { src: "assets/images/photo-08.jpg", caption: "Tấm này dễ thương quá trời" },
     { src: "assets/images/photo-09.jpg", caption: "Đi đâu cũng có chuyện để nhớ" },
-    { src: "assets/images/photo-10.jpg", caption: "Mong em có thêm nhiều ngày thật đẹp" }
+    { src: "assets/images/photo-10.jpg", caption: "Một bông hồng gửi em ngày 20/10" }
   ]
 };
