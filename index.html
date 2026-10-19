@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#17191a">
+  <meta name="description" content="Một vườn hoa hồng, một lời chúc và mười khoảnh khắc đáng nhớ cho ngày 20/10.">
+  <title>Một vườn hồng dành cho bạn · 20/10</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="config.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="opening" id="opening" aria-label="Màn mở đầu vườn hoa hồng">
+    <div class="opening-garden" aria-hidden="true">
+      <div class="opening-photo opening-back"></div>
+      <div class="opening-photo opening-cut cut-left"></div>
+      <div class="opening-photo opening-cut cut-right"></div>
+      <div class="opening-grain"></div>
+    </div>
+    <div class="opening-top"><span>20 / 10</span><span>MADE FOR YOU ✳</span></div>
+    <div class="opening-title"><span class="title-line">một xíu</span><span class="title-line title-script">hoa</span><span class="title-line">cho <span id="openingRecipient">em</span><span class="title-dot">.</span></span><small id="openingSubtitle">một vườn hồng nhỏ, dành riêng cho em ♡</small></div>
+    <button class="opening-skip" id="skipOpening" type="button">Bỏ qua <span aria-hidden="true">↗</span></button>
+  </div>
+
+  <div class="app-shell" id="appShell">
+    <div class="ambient-petals" id="ambientPetals" aria-hidden="true"></div>
+    <header class="app-header"><span class="date-mark">✳ <b>20 / 10</b></span><button class="music-button" id="musicButton" type="button" aria-label="Bật nhạc nền" aria-pressed="false"><span class="music-bars" aria-hidden="true"><i></i><i></i><i></i></span><span id="musicLabel">Bật nhạc</span></button></header>
+
+    <main class="scene-track" id="sceneTrack">
+      <section class="scene wish-scene" id="wishScene" aria-label="Lời chúc 20 tháng 10">
+        <div class="wish-copy" id="wishCopy" role="button" tabindex="0" aria-label="Mở lời chúc đầy đủ"><p class="overline">20.10 / GỬI EM MỘT CHÚT DỄ THƯƠNG</p><h1>Gửi <em id="recipientName">em</em><span class="headline-dot">.</span></h1><p class="wish-message" id="greetingText">Nhân dịp 20/10, anh chúc em có một ngày thật vui vẻ, hạnh phúc và ngập tràn những điều dễ thương nhóoo.</p><span class="read-letter-hint">CHẠM VÀO CHỮ ĐỂ ĐỌC HẾT LỜI ANH <span aria-hidden="true">↗</span></span></div>
+        <div class="rose-stage" id="roseStage"><div class="flower-backing backing-one" aria-hidden="true"></div><div class="flower-backing backing-two" aria-hidden="true"></div><button class="rose-drag" id="roseDrag" type="button" aria-label="Kéo ảnh hoa hồng để cánh hoa bay, vuốt trái để xem ảnh"><img src="assets/images/rose-reference-02.jpg" alt="Bó hoa hồng bên bờ biển" draggable="false"><span class="flower-sticker-caption">MỘT CHIẾC HOA XINH ♡</span></button><span class="rose-drag-note">CHẠM & KÉO HOA ↗</span></div>
+        <div class="wish-bottom"><p class="closing-line" id="closingText">Anh có một chiếc thư dài xíu dành cho em. Chạm vào lời chúc để đọc hết nha ♡</p><p class="signature">Một chút quan tâm từ <strong id="senderName">anh</strong> <span>✳</span></p><button class="swipe-cta" id="toGallery" type="button"><span>XEM MẤY TẤM ẢNH DỄ THƯƠNG NÈ</span><span class="cta-arrow" aria-hidden="true">→</span></button></div>
+      </section>
+
+      <section class="scene gallery-scene" id="galleryScene" aria-label="Mười ảnh kỷ niệm">
+        <div class="gallery-heading"><button class="back-button" id="backToWish" type="button" aria-label="Quay về lời chúc">←</button><div><p class="overline">MẤY TẤM ẢNH ĐÁNG YÊU ✳</p><h2>Xoay một vòng,<br><em>vui thêm một xíu.</em></h2></div></div>
+        <div class="globe-stage" id="globeStage" aria-label="Kéo ngang và dọc để xoay 10 ảnh"><div class="globe-light"></div><div class="globe-core"><div class="globe-line globe-line-one"></div><div class="globe-line globe-line-two"></div><span>10<br><small>KHOẢNH KHẮC</small></span></div><div class="globe-orbit orbit-one"></div><div class="globe-orbit orbit-two"></div><div class="photo-sphere" id="photoSphere"></div></div>
+        <div class="gallery-bottom"><div class="gallery-counter"><span id="activePhotoNumber">01</span><span class="counter-divider"></span><span>10</span></div><p id="activePhotoCaption">Nhìn tấm này là thấy vui rồi ♡</p><span class="gallery-hint">KÉO NGANG / DỌC ĐỂ XOAY · VUỐT PHẢI ĐỂ QUAY LẠI</span></div>
+      </section>
+    </main>
+    <div class="scene-dots" aria-label="Trang hiện tại"><span class="dot active"></span><span class="dot"></span></div>
+  </div>
+
+  <div class="photo-viewer" id="photoViewer" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Xem ảnh lớn"><button class="viewer-close" id="viewerClose" type="button" aria-label="Đóng ảnh">×</button><button class="viewer-arrow viewer-prev" id="viewerPrev" type="button" aria-label="Ảnh trước">←</button><figure><div class="viewer-image" id="viewerImage"></div><figcaption><span id="viewerCount">01 / 10</span><strong id="viewerCaption"></strong></figcaption></figure><button class="viewer-arrow viewer-next" id="viewerNext" type="button" aria-label="Ảnh tiếp theo">→</button></div>
+  <div class="letter-viewer" id="letterViewer" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Lời chúc ngày 20 tháng 10"><button class="letter-close" id="letterClose" type="button" aria-label="Đóng lời chúc">×</button><div class="letter-scroll"><span class="letter-badge">✳ &nbsp; 20 / 10 &nbsp; ✳</span><h2>Gửi <em id="letterRecipient">em</em>,</h2><p class="letter-intro">Một chiếc thư hơi dài, nhưng là thật lòng đó ✳</p><div class="letter-content" id="letterContent"></div><p class="letter-sign">Chúc em một ngày thật vui,<br><strong id="letterSender">anh</strong> ✳</p><span class="letter-tip">chạm vào từng đoạn chữ thử xem ✳</span><p class="music-credit">Nhạc: <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100044" target="_blank" rel="noopener noreferrer">“There is Romance” · Kevin MacLeod</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a></p></div></div>
+  <audio id="backgroundAudio" loop preload="none"></audio>
+</body>
+</html>
