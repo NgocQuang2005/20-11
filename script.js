@@ -2,9 +2,29 @@
   'use strict';
 
   var config = window.GARDEN_CONFIG || {};
-  var photos = Array.isArray(config.photos) ? config.photos.slice(0, 10) : [];
+  var photos = Array.isArray(config.photos) ? config.photos.slice(0, 10).map(function (photo) {
+    return { src: photo && photo.src || '', caption: photo && photo.caption || '' };
+  }) : [];
   while (photos.length < 10) photos.push({ src: '', caption: 'Một chiếc kỷ niệm dễ thương' });
+  var defaultCaptions = photos.map(function (photo) { return photo.caption; });
   var $ = function (id) { return document.getElementById(id); };
+  var photoStorageKey = 'garden-20-10-photos-v1';
+  var savedPhotoSlots = {};
+  var photoStorageReady = false;
+  try {
+    var storedPhotos = window.localStorage.getItem(photoStorageKey);
+    if (storedPhotos) {
+      var parsedPhotos = JSON.parse(storedPhotos);
+      if (parsedPhotos && typeof parsedPhotos === 'object' && !Array.isArray(parsedPhotos)) savedPhotoSlots = parsedPhotos;
+    }
+    photoStorageReady = true;
+  } catch (error) { photoStorageReady = false; }
+  photos.forEach(function (photo, index) {
+    if (!Object.prototype.hasOwnProperty.call(savedPhotoSlots, index)) return;
+    var saved = savedPhotoSlots[index];
+    photo.src = typeof saved === 'string' && /^data:image\/(jpeg|png|webp);base64,/.test(saved) ? saved : '';
+    if (!photo.src) photo.caption = 'Chưa thêm ảnh ' + String(index + 1).padStart(2, '0');
+  });
   var reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   var galleryOpen = false;
   var viewerOpen = false;
@@ -28,31 +48,70 @@
   var suppressBackdropClick = false;
   var suppressLetterClick = false;
   var letterFocus = null;
+  var managerOpen = false;
+  var managerMode = 'add';
+  var managerFocus = null;
+  var managerBusy = false;
+  var pickSlotIndex = 0;
+  var editorOpen = false;
+  var editorFocus = null;
 
   function text(value, fallback) {
     return typeof value === 'string' && value.trim() ? value.trim() : fallback;
   }
-  var recipient = text(config.recipient, 'em');
-  $('recipientName').textContent = recipient;
-  $('openingRecipient').textContent = recipient;
-  $('openingSubtitle').textContent = 'một vườn hồng nhỏ, dành riêng cho ' + recipient + ' ♡';
-  $('letterRecipient').textContent = recipient;
-  $('senderName').textContent = text(config.sender, 'anh');
-  $('letterSender').textContent = text(config.sender, 'anh');
-  $('greetingText').textContent = text(config.greeting, 'Anh có một lời chúc dành riêng cho em. Chạm để đọc nha ♡');
-  $('closingText').textContent = text(config.closing, 'Anh có một chiếc thư dài xíu dành cho em. Chạm vào lời chúc để đọc hết nha ♡');
-  document.title = 'Một vườn hồng dành cho ' + recipient + ' · 20/10';
-
-  var letterParagraphs = Array.isArray(config.letter) ? config.letter.filter(function (p) {
+  var wishStorageKey = 'garden-20-10-wish-v1';
+  var defaultLetter = Array.isArray(config.letter) ? config.letter.filter(function (p) {
     return typeof p === 'string' && p.trim();
-  }) : [];
-  if (!letterParagraphs.length) letterParagraphs = [text(config.greeting, 'Chúc em 20/10 thật vui nha ♡')];
-  letterParagraphs.forEach(function (paragraph) {
-    var p = document.createElement('p');
-    p.className = 'letter-paragraph';
-    p.textContent = paragraph;
-    $('letterContent').appendChild(p);
-  });
+  }).map(function (p) { return p.trim(); }) : [];
+  var defaultWish = {
+    recipient: text(config.recipient, 'em'),
+    sender: text(config.sender, 'anh'),
+    greeting: text(config.greeting, 'Anh có một lời chúc dành riêng cho em. Chạm để đọc nha ♡'),
+    closing: text(config.closing, 'Anh có một chiếc thư dài xíu dành cho em. Chạm vào lời chúc để đọc hết nha ♡'),
+    letter: defaultLetter.length ? defaultLetter : [text(config.greeting, 'Chúc em 20/10 thật vui nha ♡')]
+  };
+  var wishState = {
+    recipient: defaultWish.recipient, sender: defaultWish.sender,
+    greeting: defaultWish.greeting, closing: defaultWish.closing,
+    letter: defaultWish.letter.slice()
+  };
+  var wishStorageReady = false;
+  try {
+    var storedWish = window.localStorage.getItem(wishStorageKey);
+    if (storedWish) {
+      var parsedWish = JSON.parse(storedWish);
+      if (parsedWish && typeof parsedWish === 'object') {
+        ['recipient', 'sender', 'greeting', 'closing'].forEach(function (key) {
+          if (typeof parsedWish[key] === 'string' && parsedWish[key].trim()) wishState[key] = parsedWish[key].trim();
+        });
+        if (Array.isArray(parsedWish.letter)) {
+          var savedLetter = parsedWish.letter.filter(function (p) { return typeof p === 'string' && p.trim(); });
+          if (savedLetter.length) wishState.letter = savedLetter;
+        }
+      }
+    }
+    wishStorageReady = true;
+  } catch (error) { wishStorageReady = false; }
+  function applyWishText() {
+    $('recipientName').textContent = wishState.recipient;
+    $('openingRecipient').textContent = wishState.recipient;
+    $('openingSubtitle').textContent = 'một vườn hồng nhỏ, dành riêng cho ' + wishState.recipient + ' ♡';
+    $('letterRecipient').textContent = wishState.recipient;
+    $('senderName').textContent = wishState.sender;
+    $('letterSender').textContent = wishState.sender;
+    $('greetingText').textContent = wishState.greeting;
+    $('closingText').textContent = wishState.closing;
+    document.title = 'Một vườn hồng dành cho ' + wishState.recipient + ' · 20/10';
+    var content = $('letterContent');
+    content.replaceChildren();
+    wishState.letter.forEach(function (paragraph) {
+      var p = document.createElement('p');
+      p.className = 'letter-paragraph';
+      p.textContent = paragraph;
+      content.appendChild(p);
+    });
+  }
+  applyWishText();
   var letterViewer = $('letterViewer');
   function letterSpark(clientX, clientY) {
     for (var i = 0; i < 7; i++) {
@@ -70,7 +129,7 @@
     }
   }
   function openLetter(event) {
-    if (letterOpen || galleryOpen || suppressLetterClick) return;
+    if (letterOpen || editorOpen || galleryOpen || suppressLetterClick) return;
     letterFocus = document.activeElement;
     letterOpen = true;
     letterViewer.classList.add('open');
@@ -103,6 +162,74 @@
     letterSpark(event.clientX, event.clientY);
   });
 
+  var wishEditor = $('wishEditor');
+  function fillWishEditor() {
+    $('editRecipient').value = wishState.recipient;
+    $('editSender').value = wishState.sender;
+    $('editGreeting').value = wishState.greeting;
+    $('editClosing').value = wishState.closing;
+    $('editLetter').value = wishState.letter.join('\n\n');
+  }
+  function openWishEditor() {
+    if (galleryOpen || letterOpen || managerOpen) return;
+    editorFocus = document.activeElement;
+    editorOpen = true;
+    fillWishEditor();
+    $('wishEditorStatus').textContent = wishStorageReady ? '' : 'Trình duyệt này không cho lưu nội dung vào localStorage.';
+    wishEditor.classList.add('open');
+    wishEditor.setAttribute('aria-hidden', 'false');
+    $('appShell').inert = true;
+    $('editRecipient').focus();
+  }
+  function closeWishEditor() {
+    editorOpen = false;
+    wishEditor.classList.remove('open');
+    wishEditor.setAttribute('aria-hidden', 'true');
+    $('appShell').inert = false;
+    if (editorFocus && editorFocus.focus) editorFocus.focus({ preventScroll: true });
+  }
+  $('openWishEditor').addEventListener('click', openWishEditor);
+  $('closeWishEditor').addEventListener('click', closeWishEditor);
+  $('cancelWishEditor').addEventListener('click', closeWishEditor);
+  wishEditor.addEventListener('click', function (event) { if (event.target === wishEditor) closeWishEditor(); });
+  $('wishEditorForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+    var letter = $('editLetter').value.trim().replace(/\r\n?/g, '\n').split(/\n\s*\n/).map(function (p) { return p.trim(); }).filter(Boolean);
+    var next = {
+      recipient: $('editRecipient').value.trim(),
+      sender: $('editSender').value.trim(),
+      greeting: $('editGreeting').value.trim(),
+      closing: $('editClosing').value.trim(),
+      letter: letter
+    };
+    if (!next.recipient || !next.sender || !next.greeting || !next.closing || !letter.length) {
+      $('wishEditorStatus').textContent = 'Bạn điền đủ các phần lời chúc trước khi lưu nha.';
+      return;
+    }
+    if (!wishStorageReady) {
+      $('wishEditorStatus').textContent = 'Trình duyệt này không cho lưu nội dung vào localStorage.';
+      return;
+    }
+    try { window.localStorage.setItem(wishStorageKey, JSON.stringify(next)); }
+    catch (error) { $('wishEditorStatus').textContent = 'Không lưu được. Hãy kiểm tra bộ nhớ trình duyệt rồi thử lại.'; return; }
+    wishState = next;
+    applyWishText();
+    closeWishEditor();
+  });
+  $('resetWishText').addEventListener('click', function () {
+    if (!window.confirm('Khôi phục lời chúc ban đầu? Bản bạn đã sửa trên điện thoại này sẽ bị xóa.')) return;
+    try { window.localStorage.removeItem(wishStorageKey); }
+    catch (error) { $('wishEditorStatus').textContent = 'Không khôi phục được vì trình duyệt chặn localStorage.'; return; }
+    wishState = {
+      recipient: defaultWish.recipient, sender: defaultWish.sender,
+      greeting: defaultWish.greeting, closing: defaultWish.closing,
+      letter: defaultWish.letter.slice()
+    };
+    applyWishText();
+    fillWishEditor();
+    $('wishEditorStatus').textContent = 'Đã khôi phục bản gốc.';
+  });
+
   function closeOpening() {
     var opening = $('opening');
     if (!opening || opening.classList.contains('is-closing')) return;
@@ -116,7 +243,7 @@
 
   var dots = document.querySelectorAll('.scene-dots .dot');
   function showGallery() {
-    if (viewerOpen || letterOpen) return;
+    if (viewerOpen || letterOpen || editorOpen) return;
     galleryOpen = true;
     $('appShell').classList.add('gallery-active');
     $('sceneTrack').classList.add('show-gallery');
@@ -277,6 +404,30 @@
     }
     return box;
   }
+  function updatePhotoCard(index, refresh) {
+    var card = cards[index];
+    var src = typeof photos[index].src === 'string' ? photos[index].src.trim() : '';
+    imageLoaded[index] = false;
+    card.setAttribute('aria-label', 'Xem ảnh ' + (index + 1) + ': ' + text(photos[index].caption, 'Kỷ niệm'));
+    card.replaceChild(placeholder(index, false), card.firstChild);
+    if (src) {
+      var img = new Image();
+      img.alt = text(photos[index].caption, 'Ảnh kỷ niệm ' + (index + 1));
+      img.onload = function () {
+        if (photos[index].src !== src) return;
+        imageLoaded[index] = true;
+        card.replaceChild(img, card.firstChild);
+        if (viewerOpen && currentViewerIndex === index) showViewerImage(index);
+      };
+      img.onerror = function () { if (photos[index].src === src) imageLoaded[index] = false; };
+      img.src = src;
+    }
+    if (refresh) {
+      activeIndex = -1;
+      renderGlobe();
+      if (viewerOpen && currentViewerIndex === index) showViewerImage(index);
+    }
+  }
   photos.forEach(function (photo, index) {
     var card = document.createElement('button');
     card.className = 'orbit-card';
@@ -287,22 +438,162 @@
     count.className = 'card-count';
     count.textContent = String(index + 1).padStart(2, '0');
     card.appendChild(count);
-    var src = typeof photo.src === 'string' ? photo.src.trim() : '';
-    if (src) {
-      var img = new Image();
-      img.alt = text(photo.caption, 'Ảnh kỷ niệm ' + (index + 1));
-      img.onload = function () {
-        imageLoaded[index] = true;
-        card.replaceChild(img, card.firstChild);
-      };
-      img.onerror = function () { imageLoaded[index] = false; };
-      img.src = src;
-    }
     card.addEventListener('click', function () {
       if (!suppressPhotoClick) openViewer(index);
     });
     $('photoSphere').appendChild(card);
     cards.push(card);
+    updatePhotoCard(index, false);
+  });
+
+  function savePhotoSlot(index, value) {
+    if (!photoStorageReady) throw new Error('Trình duyệt này không cho lưu ảnh vào localStorage.');
+    var next = Object.assign({}, savedPhotoSlots);
+    next[index] = value;
+    try { window.localStorage.setItem(photoStorageKey, JSON.stringify(next)); }
+    catch (error) { throw new Error('Bộ nhớ trình duyệt đã đầy. Hãy xóa một ảnh rồi thử lại.'); }
+    savedPhotoSlots = next;
+    photos[index].src = value || '';
+    photos[index].caption = value ? defaultCaptions[index] : 'Chưa thêm ảnh ' + String(index + 1).padStart(2, '0');
+    updatePhotoCard(index, true);
+  }
+
+  function compressPhoto(file) {
+    return new Promise(function (resolve, reject) {
+      if (!file || !file.type.startsWith('image/')) { reject(new Error('Vui lòng chọn file ảnh.')); return; }
+      if (file.size > 25000000) { reject(new Error('Ảnh quá lớn, hãy chọn ảnh dưới 25 MB.')); return; }
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        try {
+          var canvas = document.createElement('canvas');
+          var maxSide = 1100;
+          var quality = .78;
+          var data = '';
+          for (var attempt = 0; attempt < 9; attempt++) {
+            var scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+            canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+            canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+            var context = canvas.getContext('2d');
+            context.fillStyle = '#ffffff';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(img, 0, 0, canvas.width, canvas.height);
+            data = canvas.toDataURL('image/jpeg', quality);
+            if (data.length <= 180000) break;
+            maxSide = Math.round(maxSide * .82);
+            quality = Math.max(.48, quality - .06);
+          }
+          canvas.width = canvas.height = 0;
+          if (data.length > 180000) throw new Error('Không thể nén ảnh đủ nhỏ để lưu.');
+          resolve(data);
+        } catch (error) { reject(error); }
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Điện thoại không đọc được ảnh này.')); };
+      img.src = url;
+    });
+  }
+
+  var photoManager = $('photoManager');
+  function managerStatus(message) { $('photoManagerStatus').textContent = message; }
+  function renderPhotoSlots() {
+    var grid = $('photoSlotGrid');
+    grid.replaceChildren();
+    photos.forEach(function (photo, index) {
+      var slot = document.createElement('div');
+      slot.className = 'photo-slot';
+      var preview = document.createElement('div');
+      preview.className = 'photo-slot-preview';
+      if (photo.src) {
+        var img = new Image();
+        img.alt = 'Ảnh số ' + (index + 1);
+        img.onerror = function () { preview.replaceChildren(document.createTextNode('✿')); };
+        img.src = photo.src;
+        preview.appendChild(img);
+      } else preview.textContent = '✿';
+      var footer = document.createElement('div');
+      footer.className = 'photo-slot-footer';
+      var label = document.createElement('span');
+      label.textContent = 'Ảnh ' + String(index + 1).padStart(2, '0');
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = managerMode === 'delete' ? 'Xóa' : (photo.src ? 'Thay ảnh' : 'Chọn ảnh');
+      button.disabled = managerBusy || !photoStorageReady || (managerMode === 'delete' && !photo.src);
+      button.addEventListener('click', function () {
+        if (managerMode === 'delete') {
+          if (!window.confirm('Xóa ảnh số ' + String(index + 1).padStart(2, '0') + '?')) return;
+          try { savePhotoSlot(index, null); managerStatus('Đã xóa ảnh số ' + String(index + 1).padStart(2, '0') + '.'); }
+          catch (error) { managerStatus(error.message); }
+          renderPhotoSlots();
+        } else {
+          pickSlotIndex = index;
+          $('singlePhotoInput').click();
+        }
+      });
+      footer.appendChild(label);
+      footer.appendChild(button);
+      slot.appendChild(preview);
+      slot.appendChild(footer);
+      grid.appendChild(slot);
+    });
+  }
+  function openPhotoManager(mode) {
+    managerMode = mode;
+    managerFocus = document.activeElement;
+    managerOpen = true;
+    photoManager.classList.add('open');
+    photoManager.classList.toggle('delete-mode', mode === 'delete');
+    photoManager.setAttribute('aria-hidden', 'false');
+    $('photoManagerTitle').textContent = mode === 'delete' ? 'Xóa ảnh' : 'Chọn ảnh từ điện thoại';
+    $('photoManagerIntro').textContent = mode === 'delete' ? 'Chạm Xóa ở từng ảnh. Ô bị xóa sẽ hiện hoa cho tới khi bạn chọn ảnh mới.' : 'Chạm từng ô để thay ảnh, hoặc chọn nhiều ảnh cùng lúc. Ảnh được lưu trên điện thoại này.';
+    managerStatus(photoStorageReady ? '' : 'Trình duyệt hiện không cho dùng localStorage, ảnh chưa thể lưu lâu dài.');
+    $('pickManyPhotos').disabled = !photoStorageReady;
+    $('appShell').inert = true;
+    renderPhotoSlots();
+    $('closePhotoManager').focus();
+  }
+  function closePhotoManager() {
+    if (managerBusy) return;
+    managerOpen = false;
+    photoManager.classList.remove('open');
+    photoManager.setAttribute('aria-hidden', 'true');
+    $('appShell').inert = false;
+    if (managerFocus && managerFocus.focus) managerFocus.focus({ preventScroll: true });
+  }
+  async function addSelectedPhotos(files, startIndex) {
+    var selected = Array.prototype.slice.call(files, 0, 10 - startIndex);
+    var extra = files.length > selected.length;
+    if (!selected.length || managerBusy) return;
+    managerBusy = true;
+    renderPhotoSlots();
+    var saved = 0;
+    var failure = '';
+    for (var i = 0; i < selected.length; i++) {
+      managerStatus('Đang lưu ảnh ' + (i + 1) + '/' + selected.length + '...');
+      try {
+        var data = await compressPhoto(selected[i]);
+        savePhotoSlot(startIndex + i, data);
+        saved++;
+      } catch (error) { failure = error.message; break; }
+    }
+    managerBusy = false;
+    renderPhotoSlots();
+    managerStatus((saved ? 'Đã lưu ' + saved + ' ảnh trên điện thoại này. ' : '') + (extra ? 'Chỉ dùng 10 ảnh đầu. ' : '') + failure);
+  }
+  $('openPhotoPicker').addEventListener('click', function () { openPhotoManager('add'); });
+  $('openPhotoDelete').addEventListener('click', function () { openPhotoManager('delete'); });
+  $('closePhotoManager').addEventListener('click', closePhotoManager);
+  photoManager.addEventListener('click', function (event) { if (event.target === photoManager) closePhotoManager(); });
+  $('pickManyPhotos').addEventListener('click', function () { if (!managerBusy) $('manyPhotoInput').click(); });
+  $('singlePhotoInput').addEventListener('change', function () {
+    var files = this.files;
+    addSelectedPhotos(files, pickSlotIndex);
+    this.value = '';
+  });
+  $('manyPhotoInput').addEventListener('change', function () {
+    var files = this.files;
+    addSelectedPhotos(files, 0);
+    this.value = '';
   });
 
   function renderGlobe() {
@@ -435,6 +726,14 @@
   });
   viewer.addEventListener('pointercancel', function () { viewerSwipe = null; });
   document.addEventListener('keydown', function (event) {
+    if (editorOpen) {
+      if (event.key === 'Escape') closeWishEditor();
+      return;
+    }
+    if (managerOpen) {
+      if (event.key === 'Escape') closePhotoManager();
+      return;
+    }
     if (letterOpen) {
       if (event.key === 'Escape') closeLetter();
       if (event.key === 'Tab') { event.preventDefault(); $('letterClose').focus(); }
